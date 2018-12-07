@@ -6,7 +6,8 @@ namespace day6
 {
     class Program
     {
-        static readonly string OutFileName = "./output.txt";
+        static readonly string OutFileName1 = "./output1.txt";
+        static readonly int TotalDistanceThreshold = 10000;
 
         static void Main(string[] args)
         {
@@ -33,25 +34,30 @@ namespace day6
             var coords = (from y in Enumerable.Range(minY, (maxY - minY) + 1)
                           from x in Enumerable.Range(minX, (maxX - minX) + 1)
                           let coord = new Point(x, y)
-                          let nearestPoints = (from point in points
-                                               let distance = coord.GetManhattanDistanceTo(point)
-                                               group point by distance into pointsByDistance
+                          let distanceToPoints = from point in points
+                                                 select new {
+                                                     Point = point,
+                                                     Distance = coord.GetManhattanDistanceTo(point)
+                                                 }
+                          let nearestPoints = (from point in distanceToPoints
+                                               group point by point.Distance into pointsByDistance
                                                select new
                                                {
                                                    Distance = pointsByDistance.Key,
-                                                   Points = pointsByDistance.AsEnumerable()
+                                                   Points = pointsByDistance.Select(o => o.Point).AsEnumerable()
                                                }).OrderBy(o => o.Distance).First()
                           select new
                           {
                               Point = coord,
                               IsInputPoint = points.Any(p => coord.Equals(p)),
-                              NearestPoints = nearestPoints.Points.ToArray()
+                              NearestPoints = nearestPoints.Points.ToArray(),
+                              DistanceToAllPoints = distanceToPoints.Select(o => o.Distance).Sum()
                           }).ToArray();
 
-            if (File.Exists(OutFileName))
-                File.Delete(OutFileName);
+            if (File.Exists(OutFileName1))
+                File.Delete(OutFileName1);
 
-            using (var outFile = File.OpenWrite(OutFileName))
+            using (var outFile = File.OpenWrite(OutFileName1))
             using (var outWriter = new StreamWriter(outFile, System.Text.Encoding.UTF8))
             {
                 var y = 0;
@@ -103,6 +109,12 @@ namespace day6
             var largestArea = areasNotInfinite.OrderByDescending(o => o.Size).First();
 
             Console.WriteLine($"Largest area is of size {largestArea.Size}.");
+
+            var coordsWithinThreshold = coords
+                .Where(o => o.DistanceToAllPoints < TotalDistanceThreshold)
+                .Count();
+
+            Console.WriteLine($"Number of points with total distance to all points less than {TotalDistanceThreshold}: {coordsWithinThreshold}");
         }
     }
 }

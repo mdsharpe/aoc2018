@@ -30,8 +30,8 @@ namespace day6
 
             Console.WriteLine($"Grid: ({minX}, {minY}) - ({maxX}, {maxY}).");
 
-            var coords = (from y in Enumerable.Range(minY, maxY - minY)
-                          from x in Enumerable.Range(minX, maxX - minX)
+            var coords = (from y in Enumerable.Range(minY, (maxY - minY) + 1)
+                          from x in Enumerable.Range(minX, (maxX - minX) + 1)
                           let coord = new Point(x, y)
                           let nearestPoints = (from point in points
                                                let distance = coord.GetManhattanDistanceTo(point)

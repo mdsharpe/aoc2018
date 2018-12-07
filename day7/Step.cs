@@ -1,10 +1,16 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace day7 {
     class Step {
-        public string Name { get; set; }
+        public Step(char letter)
+        {
+            this.Letter = letter;
+        }
 
-        public ISet<Step> Prerequisites { get; } = new HashSet<Step>();
+        public char Letter { get; private set; }
+
+        public ISet<Step> Dependencies { get; } = new HashSet<Step>();
     }
 }

@@ -11,6 +11,6 @@ namespace day7 {
 
         public char Letter { get; private set; }
 
-        public ISet<Step> Dependencies { get; } = new HashSet<Step>();
+        public ISet<Step> IsBefore { get; } = new HashSet<Step>();
     }
 }

@@ -10,14 +10,14 @@ namespace day7
         {
             int diff;
 
-            if (FindDependency(x, y, 1, out diff))
+            if (GetIsBefore(x, y, 1, out diff))
             {
+                Console.WriteLine($"[Comparison] {x.Letter} is before {y.Letter} by {diff}.");
                 diff *= -1;
-                Console.WriteLine($"[Comparison] {x.Letter} comes before {y.Letter} by {diff}.");
             }
-            else if (FindDependency(y, x, 1, out diff))
+            else if (GetIsBefore(y, x, 1, out diff))
             {
-                Console.WriteLine($"[Comparison] {x.Letter} comes after {y.Letter} by {diff}.");
+                Console.WriteLine($"[Comparison] {x.Letter} is after {y.Letter} by {diff}.");
             }
             else
             {
@@ -28,18 +28,18 @@ namespace day7
             return diff;
         }
 
-        private bool FindDependency(Step x, Step y, int curDepth, out int depth)
+        private bool GetIsBefore(Step x, Step y, int curDepth, out int depth)
         {
             depth = curDepth;
 
-            if (y.Dependencies.Contains(x))
+            if (x.IsBefore.Contains(y))
             {
                 return true;
             }
 
-            foreach (var dep in y.Dependencies)
+            foreach (var dep in x.IsBefore)
             {
-                if (FindDependency(x, dep, curDepth + 1, out int innerDepth))
+                if (GetIsBefore(dep, y, curDepth + 1, out int innerDepth))
                 {
                     depth++;
                     return true;

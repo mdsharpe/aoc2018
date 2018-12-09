@@ -11,7 +11,7 @@ namespace day7
 
         static void Main(string[] args)
         {
-            var dependencies = (from dependencyString in System.IO.File.ReadAllLines("./input.1.txt")
+            var dependencies = (from dependencyString in System.IO.File.ReadAllLines("./input.txt")
                                 let match = InputParser.Match(dependencyString)
                                 select new
                                 {
@@ -34,19 +34,24 @@ namespace day7
                 {
                     foreach (var dep in deps)
                     {
-                        if (steps.TryGetValue(dep.IsBefore, out var depStep))
-                        {
-                            step.IsBefore.Add(depStep);
-                        }
+                        step.IsBefore.Add(steps[dep.IsBefore]);
                     }
                 }
 
                 Console.WriteLine($"Step {step.Letter} is before: {string.Join(", ", step.IsBefore.Select(o => o.Letter))}");
             }
 
-            var sequence = steps.Values
-                .OrderBy(o => o, new StepComparer())
-                .ThenBy(o => o.Letter);
+            var sequence = new List<Step>();
+            var availableSteps = new HashSet<Step>(steps.Values);
+            while (availableSteps.Any())
+            {
+                var candidateSteps = from s in availableSteps
+                                     where !availableSteps.Any(o => o.IsBefore.Contains(s))
+                                     select s;
+                var selectedStep = candidateSteps.OrderBy(o => o.Letter).First();
+                sequence.Add(selectedStep);
+                availableSteps.Remove(selectedStep);
+            }
 
             Console.WriteLine($"The order is: {string.Concat(sequence.Select(o => o.Letter))}");
         }

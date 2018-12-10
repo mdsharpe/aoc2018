@@ -8,13 +8,13 @@ namespace day7
 {
     class Program
     {
-        private static readonly int WorkerCount = 2;
-        private static readonly int StepBaseDuration = 0;
+        private static readonly int WorkerCount = 5;
+        private static readonly int StepBaseDuration = 60;
         private static readonly Regex InputParser = new Regex("^Step (?<s1>[A-Z]) must be finished before step (?<s2>[A-Z]) can begin.$");
 
         static void Main(string[] args)
         {
-            var dependencies = (from dependencyString in System.IO.File.ReadAllLines("./input.example.txt")
+            var dependencies = (from dependencyString in System.IO.File.ReadAllLines("./input.txt")
                                 let match = InputParser.Match(dependencyString)
                                 select new
                                 {
@@ -69,6 +69,7 @@ namespace day7
             {
                 var candidateSteps = (from s in availableSteps
                                       where !availableSteps.Any(o => o.IsBefore.Contains(s))
+                                      where !workerAssignments.Any(o => o.Value?.Step == s)
                                       orderby s.Letter
                                       select s).ToArray();
 
@@ -85,9 +86,6 @@ namespace day7
                             Step = candidateStep,
                             Ttl = candidateStep.Duration
                         };
-
-                        // TODO Don't remove from available steps 'til done.
-                        availableSteps.Remove(candidateStep);
                     }
                     else
                     {
@@ -95,20 +93,14 @@ namespace day7
                     }
                 }
 
-                var output = new StringBuilder();
-                output.Append($"{second}\t");
-                foreach (var worker in workerAssignments.OrderBy(o => o.Key))
-                {
-                    output.Append(string.Concat(worker.Value != null ? worker.Value.Step.Letter : '.', '\t'));
-                }
-                output.Append($"{string.Concat(multiWorkerSequence.Select(o => o.Letter))}");
-                Console.WriteLine(output.ToString());
+                OutputMultiWorkerTable(multiWorkerSequence, second, workerAssignments);
 
                 foreach (var worker in workerAssignments.Where(o => o.Value != null).ToArray())
                 {
                     worker.Value.Ttl--;
                     if (worker.Value.Ttl == 0)
                     {
+                        availableSteps.Remove(worker.Value.Step);
                         multiWorkerSequence.Add(worker.Value.Step);
                         workerAssignments[worker.Key] = null;
                     }
@@ -116,6 +108,20 @@ namespace day7
 
                 second++;
             } while (availableSteps.Any() || workerAssignments.Any(o => o.Value != null));
+
+            OutputMultiWorkerTable(multiWorkerSequence, second, workerAssignments);
+        }
+
+        private static void OutputMultiWorkerTable(List<Step> multiWorkerSequence, int second, Dictionary<int, WorkerAssignment> workerAssignments)
+        {
+            var output = new StringBuilder();
+            output.Append($"{second}\t");
+            foreach (var worker in workerAssignments.OrderBy(o => o.Key))
+            {
+                output.Append(string.Concat(worker.Value != null ? worker.Value.Step.Letter : '.', '\t'));
+            }
+            output.Append($"{string.Concat(multiWorkerSequence.Select(o => o.Letter))}");
+            Console.WriteLine(output.ToString());
         }
     }
 }

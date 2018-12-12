@@ -14,21 +14,43 @@ namespace day10
         private static void Run(string filename)
         {
             var sky = Sky.Parse(filename);
+            var exit = false;
 
-            while (true)
+            do
             {
                 Console.Clear();
                 Console.WriteLine($"{filename} @ {sky.Time} seconds");
-                Console.WriteLine($"({sky.TopLeft.X}, {sky.TopLeft.Y}) - ({sky.BottomRight.X}, {sky.BottomRight.Y})");
                 sky.Print();
-                Console.WriteLine("Press [Esc] to end, any other key to continue.");
+                Console.WriteLine("Press [Esc] to end, arrow keys to navigate in time.");
 
-                if (Console.ReadKey(true).Key == ConsoleKey.Escape)
-                {
-                    break;
-                }
+                while (!HandleKeyPress(sky, out exit)) { }
+            } while (!exit);
+        }
 
-                sky.MoveAll();
+        private static bool HandleKeyPress(Sky sky, out bool exit)
+        {
+            exit = false;
+            var key = Console.ReadKey(true).Key;
+
+            switch (key)
+            {
+                case ConsoleKey.Escape:
+                    exit = true;
+                    return true;
+                case ConsoleKey.UpArrow:
+                    sky.MoveAll(60);
+                    return true;
+                case ConsoleKey.DownArrow:
+                    sky.MoveAll(-60);
+                    return true;
+                case ConsoleKey.LeftArrow:
+                    sky.MoveAll(-1);
+                    return true;
+                case ConsoleKey.RightArrow:
+                    sky.MoveAll(1);
+                    return true;
+                default:
+                    return false;
             }
         }
     }

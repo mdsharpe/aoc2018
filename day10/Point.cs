@@ -30,10 +30,10 @@ namespace day10
                     int.Parse(match.Groups["vy"].Value)));
         }
 
-        public void Move()
+        public void Move(int seconds = 1)
         {
-            Coordinate.X += Velocity.X;
-            Coordinate.Y += Velocity.Y;
+            Coordinate.X += (Velocity.X * seconds);
+            Coordinate.Y += (Velocity.Y * seconds);
         }
     }
 }

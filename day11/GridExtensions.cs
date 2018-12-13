@@ -14,22 +14,49 @@ namespace day11
             return @this;
         }
 
-        public static Grid WriteLineAndAssertMaxCoords(this Grid @this, int expectedX, int expectedY)
+        public static Grid WriteLineAndAssertMax(this Grid @this, int size, int expectedX, int expectedY)
         {
+            @this.FindMaxSquare(size, out var x, out var y);
+
             Console.Write(Format(@this));
-            Console.Write(' ');
-            Console.Write((@this.MaxX == expectedX && @this.MaxY == expectedY) ? '✓' : '❌');
+            Console.Write($"; max {size}x{size} power square at {x}, {y} ");
+            Console.Write((x == expectedX && y == expectedY) ? '✓' : '❌');
             Console.WriteLine();
             return @this;
         }
 
-        public static Grid WriteLine(this Grid @this)
+        public static Grid WriteLineAndAssertMaxAnySize(this Grid @this, int expectedSize, int expectedX, int expectedY)
         {
-            Console.WriteLine(Format(@this));
+            @this.FindMaxSquareAnySize(out var size, out var x, out var y);
+
+            Console.Write(Format(@this));
+            Console.Write($"; max {size}x{size} power square at {x}, {y} ");
+            Console.Write((size == expectedSize && x == expectedX && y == expectedY) ? '✓' : '❌');
+            Console.WriteLine();
+            return @this;
+        }
+
+        public static Grid WriteLineAndFindMax(this Grid @this, int size)
+        {
+            @this.FindMaxSquare(size, out var x, out var y);
+
+            Console.Write(Format(@this));
+            Console.Write($"; max {size}x{size} power square at {x}, {y} ");
+            Console.WriteLine();
+            return @this;
+        }
+
+        public static Grid WriteLineAndFindMaxAnySize(this Grid @this)
+        {
+            @this.FindMaxSquareAnySize(out var size, out var x, out var y);
+
+            Console.Write(Format(@this));
+            Console.Write($"; max {size}x{size} power square at {x}, {y} ");
+            Console.WriteLine();
             return @this;
         }
 
         private static string Format(Grid grid)
-            => $"Grid #{grid.SerialNumber}; max 3x3 power square at {grid.MaxX}, {grid.MaxY}";
+            => $"Grid #{grid.SerialNumber}";
     }
 }

@@ -47,12 +47,10 @@ namespace day10
 
             var width = (bottomRight.X - topLeft.X) + 1;
             var height = (bottomRight.Y - topLeft.Y) + 1;
-            var consoleWidth = Math.Min(width, Console.WindowWidth);
+            var consoleWidth = Math.Min(width, Console.WindowWidth - 1);
             var consoleHeight = Math.Min(height, Console.WindowHeight - 5);
             var ratioX = Convert.ToDecimal(consoleWidth) / width;
             var ratioY = Convert.ToDecimal(consoleHeight) / height;
-            var chunkWidth = width / consoleWidth;
-            var chunkHeight = height / consoleHeight;
 
             var coords = (from o in _points
                           where o.Coordinate.X >= topLeft.X
@@ -68,17 +66,22 @@ namespace day10
 
             foreach (var y in Enumerable.Range(0, consoleHeight))
             {
+                var row = Enumerable.Repeat('.', consoleWidth).ToArray();
+
                 var rowHasPoints = coords.TryGetValue(y, out var rowPoints);
 
-                foreach (var x in Enumerable.Range(0, consoleWidth))
+                if (rowHasPoints)
                 {
-                    Console.Write((rowHasPoints && rowPoints.Contains(x)) ? '#' : '.');
+                    foreach (var x in rowPoints)
+                    {
+                        if (0 <= x && x < row.Length)
+                        {
+                            row[x] = '#';
+                        }
+                    }
                 }
 
-                if (y < consoleHeight)
-                {
-                    Console.WriteLine();
-                }
+                Console.WriteLine(row);
             }
         }
     }

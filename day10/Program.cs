@@ -20,6 +20,7 @@ namespace day10
             {
                 Console.Clear();
                 Console.WriteLine($"{filename} @ {sky.Time} seconds");
+                Console.WriteLine($"{Console.WindowWidth} x {Console.WindowHeight}");
                 sky.Print();
                 Console.WriteLine("Press [Esc] to end, arrow keys to navigate in time.");
 

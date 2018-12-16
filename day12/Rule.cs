@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,13 +20,12 @@ namespace day12
             _evaluateRangeOffset = (sequence.Length - 1) / 2;
         }
 
-        public bool? Evaluate(bool[] state, int index)
+        public bool? Evaluate(BitArray state, int index)
         {
             var evals = from i in Enumerable.Range(0, _sequence.Length)
-                        let ruleVal = _sequence[i]
                         let stateIndex = index + (i - _evaluateRangeOffset)
                         let stateVal = (stateIndex >= 0 && stateIndex < state.Length) ? state[stateIndex] : false
-                        select stateVal == ruleVal;
+                        select stateVal == _sequence[i];
 
             if (evals.All(o => o))
             {

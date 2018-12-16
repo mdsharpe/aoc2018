@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,46 +13,74 @@ namespace day12
 
         static void Main(string[] args)
         {
-            var inputLines = System.IO.File.ReadAllLines("./input.example.txt");
+            var generations = 50000000000L;
+            // var generations = 20;
+            var expandIncrement = 100;
+            var expandTotal = 0;
 
-            var state = ParseInitialState(inputLines.First()).ToArray();
+            var inputLines = System.IO.File.ReadAllLines("./input.txt");
+
+            var buf1 = new BitArray(ParseInitialState(inputLines.First()).ToArray());
+            var buf2 = new BitArray(buf1.Length);
+
             var rules = inputLines.Skip(2).Select(o => ParseRule(o)).ToArray();
 
-            PrintState(state, 0);
+            long gen = 0;
+            BitArray populatedBuf = buf1;
+            BitArray targetBuf = buf2;
 
-            for (var gen = 1; gen <= 20; gen++)
+            var outputTimer = new System.Threading.Timer(_ =>
             {
-                state = Generate(state, rules);
-                PrintState(state, gen);
+                Console.SetCursorPosition(0, Math.Max(Console.CursorTop - 1, 0));
+                Console.WriteLine($"{gen} / {generations} ({gen / generations * 100}%); Length: {buf1.Length}");
+            }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+
+            for (gen = 1; gen <= generations; gen++)
+            {
+                if (GetRequiresExpansion(populatedBuf))
+                {
+                    Expand(ref buf1, expandIncrement);
+                    Expand(ref buf2, expandIncrement);
+                    expandTotal += expandIncrement;
+                }
+
+                for (var i = 0; i < populatedBuf.Length; i++)
+                {
+                    targetBuf[i] = rules
+                        .Any(o => o.Evaluate(populatedBuf, i).GetValueOrDefault());
+                }
+
+                Swap(buf1, buf2, ref populatedBuf, ref targetBuf);
             }
+
+            outputTimer.Dispose();
+            Console.WriteLine("Done, counting...");
+
+            long sum = 0;
+            for (var i = 0; i < populatedBuf.Length; i++)
+            {
+                if (populatedBuf[i])
+                {
+                    sum += i - expandTotal;
+                }
+            }
+
+            Console.WriteLine($"Sum of the numbers of all pots which contain a plant: {sum}");
         }
 
-        private static bool[] Generate(
-            bool[] state,
-            ICollection<Rule> rules)
+        private static bool GetRequiresExpansion(BitArray buf)
+            => buf[0] || buf[1] || buf[buf.Length - 1] || buf[buf.Length - 2];
+
+        private static void Expand(ref BitArray buf, int expandIncrement)
         {
-            var result = new bool[state.Length];
-
-            for (var i = 0; i < state.Length; i++)
-            {
-                result[i] = rules
-                    .Select(o => o.Evaluate(state, i))
-                    .Any(o => o.GetValueOrDefault());
-            }
-
-            return result;
+            buf.Length += expandIncrement * 2;
+            buf = buf.LeftShift(expandIncrement);
         }
 
-        private static void PrintState(bool[] state, int generation)
+        private static void Swap(BitArray buf1, BitArray buf2, ref BitArray populatedBuf, ref BitArray targetBuf)
         {
-            var output = new StringBuilder(generation.ToString("00") + ": ");
-
-            foreach (var pot in state)
-            {
-                output.Append(pot ? '#' : '.');
-            }
-
-            Console.WriteLine(output);
+            populatedBuf = populatedBuf == buf1 ? buf2 : buf1;
+            targetBuf = targetBuf == buf1 ? buf2 : buf1;
         }
 
         private static IEnumerable<bool> ParseInitialState(string s)

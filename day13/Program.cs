@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace day13
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            Grid.Parse("input.example.txt");
-            Grid.Parse("input.txt");
+            // await Grid.Parse("input.example.txt").Run(true);
+            await Grid.Parse("input.txt").Run(verbose: true, writeMapToFile: true);
         }
     }
 }

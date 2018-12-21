@@ -346,3 +346,6 @@ ASALocalRun/
 
 # VSCode
 .vscode/
+
+# Misc
+output*.txt

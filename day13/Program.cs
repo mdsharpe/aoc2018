@@ -6,7 +6,8 @@ namespace day13
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Grid.Parse("input.example.txt");
+            Grid.Parse("input.txt");
         }
     }
 }

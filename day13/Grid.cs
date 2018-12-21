@@ -9,12 +9,12 @@ namespace day13
     internal class Grid
     {
         private readonly CellType[,] _cells;
-        private readonly IReadOnlyCollection<Truck> _trucks;
+        private readonly ICollection<Truck> _trucks;
 
         private Grid(CellType[,] cells, IEnumerable<Truck> trucks)
         {
             _cells = cells;
-            _trucks = trucks.ToList().AsReadOnly();
+            _trucks = trucks.ToList();
         }
 
         public static Grid Parse(string filePath)
@@ -69,7 +69,7 @@ namespace day13
             return new Grid(cells, trucks);
         }
 
-        public async Task Run(bool verbose = false, bool writeMapToFile = false)
+        public async Task Run(bool verbose = false, bool writeMapToFile = false, bool removeCollidedTrucks = false)
         {
             if (writeMapToFile)
             {
@@ -86,6 +86,8 @@ namespace day13
 
             Task delay = null;
 
+            var completed = false;
+
             do
             {
                 if (verbose)
@@ -93,18 +95,48 @@ namespace day13
                     delay = Task.Delay(50);
                 }
 
-                foreach (var truck in _trucks)
+                foreach (var truck in _trucks.ToArray())
                 {
+                    if (!_trucks.Contains(truck)) continue;
+
                     MoveTruck(truck);
+
+                    if (removeCollidedTrucks)
+                    {
+                        var collidedWith = GetCollidedWith(truck);
+                        if (collidedWith != null)
+                        {
+                            _trucks.Remove(truck);
+                            _trucks.Remove(collidedWith);
+                        }
+                    }
+                    else
+                    {
+                        if (GetIsCollided(truck))
+                        {
+                            completed = true;
+                            Console.Clear();
+                            Console.WriteLine($"Collision at {truck.X}, {truck.Y}.");
+                            break;
+                        }
+                    }
                 }
 
-                if (verbose)
+                if (removeCollidedTrucks && _trucks.Count == 1)
+                {
+                    completed = true;
+                    Console.Clear();
+                    var remainingTruck = _trucks.Single();
+                    Console.WriteLine($"Single remaining truck at at {remainingTruck.X}, {remainingTruck.Y}.");
+                }
+
+                if (verbose && !completed)
                 {
                     Console.SetCursorPosition(0, 0);
                     Console.Write(GetTrackString(fitToConsole: true));
                     await delay;
                 }
-            } while (true);
+            } while (!completed);
         }
 
         private void MoveTruck(Truck truck)
@@ -131,6 +163,12 @@ namespace day13
             truck.X = nextLocation.x;
             truck.Y = nextLocation.y;
         }
+
+        private bool GetIsCollided(Truck truck)
+            => _trucks.Any(o => o != truck && o.X == truck.X && o.Y == truck.Y);
+
+        private Truck GetCollidedWith(Truck truck)
+            => _trucks.FirstOrDefault(o => o != truck && o.X == truck.X && o.Y == truck.Y);
 
         private string GetTrackString(bool trackOnly = false, bool fitToConsole = false)
         {
@@ -245,11 +283,13 @@ namespace day13
             }
 
             var result = ResolveCornerConnection(GetConnections(false));
-            if (result == null) {
+            if (result == null)
+            {
                 result = ResolveCornerConnection(GetConnections(true));
             }
 
-            if (result != null) {
+            if (result != null)
+            {
                 return result.Value;
             }
 

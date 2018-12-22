@@ -95,7 +95,12 @@ namespace day13
                     delay = Task.Delay(50);
                 }
 
-                foreach (var truck in _trucks.ToArray())
+                var truckSequence = _trucks
+                    .OrderBy(o => o.Y)
+                    .ThenBy(o => o.X)
+                    .ToArray();
+
+                foreach (var truck in truckSequence)
                 {
                     if (!_trucks.Contains(truck)) continue;
 

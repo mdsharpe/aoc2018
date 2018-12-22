@@ -35,25 +35,25 @@ namespace day14
             var writeIntervalMs = 1000;
             var nextOutput = DateTimeOffset.Now;
 
-            void write(int scoresOffset)
+            int scoresOffset() => (_scores.Count - targetSequence.Length) - 1;
+
+            void write()
             {
                 Console.SetCursorPosition(resultPrefix.Length, Console.CursorTop);
-                Console.Write($"{scoresOffset} recipes.");
+                Console.Write($"{scoresOffset()} recipes.");
             }
 
             Run(() =>
             {
-                var scoresOffset = _scores.Count - targetSequence.Length;
-
                 if (DateTimeOffset.Now > nextOutput)
                 {
-                    write(scoresOffset);
+                    write();
                     nextOutput = DateTimeOffset.Now.AddMilliseconds(writeIntervalMs);
                 }
 
                 for (int i = 0; i < targetSequence.Length; i++)
                 {
-                    var si = scoresOffset + i;
+                    var si = scoresOffset() + i;
                     if (si < 0) return true;
 
                     if (_scores[si] != targetSequence[i])
@@ -65,7 +65,7 @@ namespace day14
                 return false;
             }, verbose);
 
-            write(_scores.Count - targetSequence.Length);
+            write();
             Console.WriteLine();
         }
 
@@ -87,12 +87,12 @@ namespace day14
         }
 
         private void CreateNewRecipes()
-            => _scores.AddRange(
-                _elfAssignments
-                    .Select(o => (int)_scores[o])
-                    .Sum()
-                    .ToString()
-                    .Select(o => (byte)Char.GetNumericValue(o)));
+        {
+            byte sum = 0;
+            foreach (var score in _elfAssignments.Select(o => _scores[o])) { sum += score; }
+
+            _scores.AddRange(sum.ToString().Select(o => (byte)Char.GetNumericValue(o)));
+        }
 
         private void PickNewRecipe(int elfIndex)
         {

@@ -1,4 +1,7 @@
-﻿namespace day14
+﻿using System;
+using System.Collections.Generic;
+
+namespace day14
 {
     internal class Program
     {

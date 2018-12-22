@@ -8,17 +8,50 @@ namespace day14
     internal class Kitchen
     {
         private readonly string _input;
-        private readonly List<int> _scores;
+        private readonly List<byte> _scores;
         private readonly int[] _elfAssignments;
 
         public Kitchen(string input, int elfCount)
         {
             _input = input;
-            _scores = input.Select(o => (int)Char.GetNumericValue(o)).ToList();
+            _scores = input.Select(o => (byte)Char.GetNumericValue(o)).ToList();
             _elfAssignments = Enumerable.Range(0, elfCount).ToArray();
         }
 
-        public void Find(int after, int count, bool verbose = false)
+        public void FindDigitsAfter(int after, int count, bool verbose = false)
+        {
+            Run(() => _scores.Count < after + count, verbose);
+
+            var result = string.Concat(_scores.Skip(after).Take(count).Select(o => o.ToString()));
+            Console.WriteLine($"{_input}: After {after} recipes, the scores of the next {count} would be {result}.");
+        }
+
+        public void CountDigitsBefore(string sequenceString, bool verbose = false)
+        {
+            var targetSequence = sequenceString.Select(o => (byte)Char.GetNumericValue(o)).ToArray();
+
+            Run(() =>
+            {
+                var scoresOffset = _scores.Count - targetSequence.Length;
+                for (int i = 0; i < targetSequence.Length; i++)
+                {
+                    var si = scoresOffset + i;
+                    if (si < 0) return true;
+
+                    if (_scores[si] != targetSequence[i])
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }, verbose);
+
+            var result = _scores.Count - targetSequence.Length;
+            Console.WriteLine($"{_input}: {sequenceString} first appears after {result} recipes.");
+        }
+
+        private void Run(Func<bool> runWhile, bool verbose)
         {
             if (verbose) Print();
 
@@ -32,10 +65,21 @@ namespace day14
                 }
 
                 if (verbose) Print();
-            } while (_scores.Count < after + count);
+            } while (runWhile());
+        }
 
-            var result = string.Concat(_scores.Skip(after).Take(count).Select(o => o.ToString()));
-            Console.WriteLine($"{_input}: After {after} recipes, the scores of the next {count} would be {result}.");
+        private void CreateNewRecipes()
+            => _scores.AddRange(
+                _elfAssignments
+                    .Select(o => (int)_scores[o])
+                    .Sum()
+                    .ToString()
+                    .Select(o => (byte)Char.GetNumericValue(o)));
+
+        private void PickNewRecipe(int elfIndex)
+        {
+            var assignment = _elfAssignments[elfIndex];
+            _elfAssignments[elfIndex] = (assignment + _scores[assignment] + 1) % _scores.Count;
         }
 
         private void Print()
@@ -55,20 +99,6 @@ namespace day14
             }
 
             Console.WriteLine(output);
-        }
-
-        private void CreateNewRecipes()
-        {
-            var curRecSum = _elfAssignments.Select(o => _scores[o]).Sum();
-            _scores.AddRange(curRecSum.ToString().Select(o => (int)Char.GetNumericValue(o)));
-        }
-
-        private void PickNewRecipe(int elfIndex)
-        {
-            var assignment = _elfAssignments[elfIndex];
-            assignment += _scores[assignment] + 1;
-            assignment %= _scores.Count;
-            _elfAssignments[elfIndex] = assignment;
         }
     }
 }

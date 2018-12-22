@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace day15
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        public static async Task Main()
         {
-            Fight.Parse("input.example.txt").Run(verbose: true);
+            await Fight.Parse("input.example2.txt").Run(verbose: true);
         }
     }
 }

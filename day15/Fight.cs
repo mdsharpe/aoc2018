@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace day15
 {
     internal class Fight
     {
+        private const int DelayMs = 2000;
         private readonly bool[,] _walls;
+        private readonly HashSet<Coordinate> _wallsSet;
 
         private readonly List<Unit> _units;
 
@@ -15,6 +18,22 @@ namespace day15
         {
             _walls = walls;
             _units = units;
+
+            var width = _walls.GetLength(0);
+            var height = _walls.GetLength(1);
+
+            _wallsSet = new HashSet<Coordinate>();
+
+            for (var y = 0; y < height; y++)
+            {
+                for (var x = 0; x < width; x++)
+                {
+                    if (walls[x, y])
+                    {
+                        _wallsSet.Add(new Coordinate(x, y));
+                    }
+                }
+            }
         }
 
         public static Fight Parse(string filePath)
@@ -40,10 +59,10 @@ namespace day15
                             walls[x, y] = true;
                             break;
                         case 'G':
-                            units.Add(new Goblin { X = x, Y = y });
+                            units.Add(new Goblin { Location = new Coordinate(x, y) });
                             break;
                         case 'E':
-                            units.Add(new Elf { X = x, Y = y });
+                            units.Add(new Elf { Location = new Coordinate(x, y) });
                             break;
                         case '.':
                             walls[x, y] = false;
@@ -57,13 +76,24 @@ namespace day15
             return new Fight(walls, units);
         }
 
-        public void Run(bool verbose = false)
+        public async Task Run(bool verbose = false)
         {
-            if (verbose) Print();
+            if (verbose)
+            {
+                Print();
+                await Task.Delay(DelayMs);
+            }
+
+            Task delay = null;
 
             do
             {
                 if (_units.GroupBy(o => o.GetType()).Count() < 2) break;
+
+                if (verbose)
+                {
+                    delay = Task.Delay(DelayMs);
+                }
 
                 var unitsInOrder = GetUnitsInReadingOrder().ToArray();
 
@@ -71,21 +101,37 @@ namespace day15
                 {
                     if (!_units.Contains(unit)) continue;
 
+                    Console.Write(unit.Char);
                     TakeTurn(unit);
+                }
+
+                if (verbose)
+                {
+                    await delay;
+                    Print();
                 }
             } while (true);
         }
 
         private void TakeTurn(Unit unit)
         {
+            var rf = new RouteFinder(unit.Location, _wallsSet);
             var routesToTargets = from u in _units
                                   where u.GetType() != unit.GetType()
-                                  from c in u.Location.EnumerateAdjacent()
-                                  let r = new RouteFinder(_walls).FindRoute(unit.Location, c)
+                                  let r = rf.FindRoute(u.Location)
                                   where r != null
-                                  select u;
+                                  select r;
 
-            var route = routesToTargets.OrderByDescending(o => o).FirstOrDefault();
+            var route = routesToTargets
+                .OrderByDescending(o => o.Length)
+                .ThenBy(o => o[0].Y)
+                .ThenBy(o => o[0].X)
+                .FirstOrDefault();
+
+            if (route != null && route.Any())
+            {
+                unit.Location = route.First();
+            }
         }
 
         private void Print()
@@ -114,6 +160,6 @@ namespace day15
         }
 
         private IEnumerable<Unit> GetUnitsInReadingOrder()
-            => _units.OrderBy(o => o.Y).ThenBy(o => o.X);
+            => _units.OrderBy(o => o.Location.Y).ThenBy(o => o.Location.X);
     }
 }

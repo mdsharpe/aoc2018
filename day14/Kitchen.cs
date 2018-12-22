@@ -30,9 +30,27 @@ namespace day14
         {
             var targetSequence = sequenceString.Select(o => (byte)Char.GetNumericValue(o)).ToArray();
 
+            var resultPrefix = $"{_input}: {sequenceString} first appears after ";
+            Console.Write(resultPrefix);
+            var writeIntervalMs = 1000;
+            var nextOutput = DateTimeOffset.Now;
+
+            void write(int scoresOffset)
+            {
+                Console.SetCursorPosition(resultPrefix.Length, Console.CursorTop);
+                Console.Write($"{scoresOffset} recipes.");
+            }
+
             Run(() =>
             {
                 var scoresOffset = _scores.Count - targetSequence.Length;
+
+                if (DateTimeOffset.Now > nextOutput)
+                {
+                    write(scoresOffset);
+                    nextOutput = DateTimeOffset.Now.AddMilliseconds(writeIntervalMs);
+                }
+
                 for (int i = 0; i < targetSequence.Length; i++)
                 {
                     var si = scoresOffset + i;
@@ -47,8 +65,8 @@ namespace day14
                 return false;
             }, verbose);
 
-            var result = _scores.Count - targetSequence.Length;
-            Console.WriteLine($"{_input}: {sequenceString} first appears after {result} recipes.");
+            write(_scores.Count - targetSequence.Length);
+            Console.WriteLine();
         }
 
         private void Run(Func<bool> runWhile, bool verbose)
@@ -89,9 +107,9 @@ namespace day14
             for (var i = 0; i < _scores.Count; i++)
             {
                 var surround =
-                _elfAssignments[0] == i ? "()" :
-                _elfAssignments[1] == i ? "[]" :
-                "  ";
+                    _elfAssignments[0] == i ? "()" :
+                    _elfAssignments[1] == i ? "[]" :
+                    "  ";
 
                 output.Append(surround[0]);
                 output.Append(_scores[i]);

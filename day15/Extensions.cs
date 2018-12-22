@@ -1,0 +1,33 @@
+using System;
+
+namespace day15
+{
+    internal static class Extensions
+    {
+        public static bool IsAt(this Unit @this, int x, int y)
+            => @this.X == x && @this.Y == y;
+
+        public static Coordinate GetAdjacent(this Coordinate @this, Direction direction)
+        {
+            switch (direction)
+            {
+                case Direction.Up:
+                    return new Coordinate(@this.X, @this.Y - 1);
+                case Direction.Right:
+                    return new Coordinate(@this.X + 1, @this.Y);
+                case Direction.Down:
+                    return new Coordinate(@this.X, @this.Y + 1);
+                case Direction.Left:
+                    return new Coordinate(@this.X - 1, @this.Y);
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        public static IEnumerable<Coordinate> EnumerateAdjacent(this Coordinate @this)
+        {
+            return from d in Enum.GetValues(typeof(Coordinate)).Cast<Coordinate>()
+                   select GetAdjacent(@this, d);
+        }
+    }
+}

@@ -24,7 +24,6 @@ namespace day15
             _target = to;
             _stack.Clear();
             _visited.Clear();
-            _visited.Add(_origin);
 
             VisitRecursive(_origin);
 
@@ -39,13 +38,20 @@ namespace day15
 
         private void VisitRecursive(Coordinate c)
         {
-            if (c.Equals(_target))
+            var isOrigin = c.Equals(_origin);
+            var isTarget = c.Equals(_target);
+
+            if (isTarget)
             {
                 var route = _stack.Reverse().ToArray();
                 if (GetIsRouteBetter(route)) _route = route;
             }
             else if (_route == null || _stack.Count < _route.Length)
             {
+                _visited.Add(c);
+
+                if (!isOrigin) _stack.Push(c);
+
                 var possibleSteps = c.EnumerateAdjacent()
                     .Where(o => !_walls.Contains(o))
                     .Where(o => !_visited.Contains(o))
@@ -53,12 +59,11 @@ namespace day15
 
                 foreach (var step in possibleSteps)
                 {
-                    _stack.Push(step);
-                    _visited.Add(step);
                     VisitRecursive(step);
-                    _visited.Remove(step);
-                    _stack.Pop();
                 }
+
+                _visited.Remove(c);
+                if (!isOrigin) _stack.Pop();
             }
         }
 

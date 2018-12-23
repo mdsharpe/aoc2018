@@ -100,10 +100,11 @@ namespace day15
                 foreach (var unit in unitsInOrder)
                 {
                     if (!_units.Contains(unit)) continue;
-
-                    Console.Write(unit.Char);
                     TakeTurn(unit);
-                    if (verbose) Print();
+                    if (verbose) {
+                        Print();
+                        await Task.Delay(200);
+                    }
                 }
 
                 if (verbose)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace day15
 {
@@ -8,8 +9,7 @@ namespace day15
     {
         private readonly Coordinate _origin;
         private readonly ISet<Coordinate> _obstructions;
-        private readonly Stack<Coordinate> _stack = new Stack<Coordinate>();
-        private readonly HashSet<Coordinate> _visited = new HashSet<Coordinate>();
+        private readonly object _routeLock = new object();
         private Coordinate _target;
 
         public RouteFinder(Coordinate origin, IEnumerable<Coordinate> obstructions)
@@ -22,8 +22,6 @@ namespace day15
 
         public RouteFinder Clear()
         {
-            _stack.Clear();
-            _visited.Clear();
             _target = null;
             Route = null;
             return this;
@@ -34,39 +32,46 @@ namespace day15
             Clear();
             _target = to;
 
-            VisitRecursive(_origin);
+            var routes = _origin.EnumerateAdjacent()
+                .Where(o => !_obstructions.Contains(o) || o.Equals(_target))
+                .ToArray();
+
+            Parallel.ForEach(routes, c => 
+            {
+                VisitRecursive(c, new Stack<Coordinate>(), new HashSet<Coordinate>());
+            });
 
             return this;
         }
 
-        private void VisitRecursive(Coordinate c)
+        private void VisitRecursive(Coordinate c, Stack<Coordinate> stack, HashSet<Coordinate> visited)
         {
-            var isOrigin = c.Equals(_origin);
-            var isTarget = c.Equals(_target);
-
-            if (isTarget)
+            if (c.Equals(_target))
             {
-                var route = _stack.Reverse().ToArray();
-                if (GetIsRouteBetter(route)) Route = route;
+                lock (_routeLock)
+                {
+                    var route = stack.Reverse().ToArray();
+                    if (GetIsRouteBetter(route)) Route = route;
+                }
             }
-            else if (Route == null || _stack.Count < Route.Length)
+            else if (Route == null || stack.Count < Route.Length)
             {
-                _visited.Add(c);
-
-                if (!isOrigin) _stack.Push(c);
+                visited.Add(c);
+                stack.Push(c);
 
                 var possibleSteps = c.EnumerateAdjacent()
-                    .Where(o => !_obstructions.Contains(o))
-                    .Where(o => !_visited.Contains(o))
+                    .Where(o => !_obstructions.Contains(o) || o.Equals(_target))
+                    .Where(o => !visited.Contains(o))
+                    .Where(o => !o.Equals(_origin))
                     .ToArray();
 
                 foreach (var step in possibleSteps)
                 {
-                    VisitRecursive(step);
+                    VisitRecursive(step, stack, visited);
                 }
 
-                _visited.Remove(c);
-                if (!isOrigin) _stack.Pop();
+                stack.Pop();
+                visited.Remove(c);
             }
         }
 

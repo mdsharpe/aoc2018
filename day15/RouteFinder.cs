@@ -23,11 +23,15 @@ namespace day15
         {
             _target = to;
             _stack.Clear();
+            _visited.Clear();
+            _visited.Add(_origin);
 
             VisitRecursive(_origin);
 
             _target = null;
             _stack.Clear();
+            _visited.Clear();
+
             var route = _route;
             _route = null;
             return route;
@@ -35,16 +39,12 @@ namespace day15
 
         private void VisitRecursive(Coordinate c)
         {
-            _stack.Push(c);
-
-            _visited.Add(c);
-
             if (c.Equals(_target))
             {
-                var route = _stack.Reverse().Skip(1).ToArray();
+                var route = _stack.Reverse().ToArray();
                 if (GetIsRouteBetter(route)) _route = route;
             }
-            else if (_route == null || _stack.Count < _route.Length - 2)
+            else if (_route == null || _stack.Count < _route.Length)
             {
                 var possibleSteps = c.EnumerateAdjacent()
                     .Where(o => !_walls.Contains(o))
@@ -53,13 +53,13 @@ namespace day15
 
                 foreach (var step in possibleSteps)
                 {
+                    _stack.Push(step);
+                    _visited.Add(step);
                     VisitRecursive(step);
+                    _visited.Remove(step);
+                    _stack.Pop();
                 }
             }
-
-            _visited.Remove(c);
-
-            _stack.Pop();
         }
 
         private bool GetIsRouteBetter(Coordinate[] route)
@@ -67,7 +67,7 @@ namespace day15
             if (_route == null) return true;
             if (route.Length < _route.Length) return true;
 
-            if (route.Length == _route.Length)
+            if (route.Length > 0 && route.Length == _route.Length)
             {
                 if (route[0].Y < _route[0].Y) return true;
                 if (route[0].Y == _route[0].Y && route[0].X < _route[0].X) return true;

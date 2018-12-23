@@ -116,19 +116,19 @@ namespace day15
         private void TakeTurn(Unit unit)
         {
             var rf = new RouteFinder(unit.Location, _wallsSet);
-            var routesToTargets = from u in _units
-                                  where u.GetType() != unit.GetType()
-                                  let r = rf.FindRoute(u.Location)
-                                  where r != null
-                                  select r;
+            var routes = from u in _units
+                         where u.GetType() != unit.GetType()
+                         let r = rf.FindRoute(u.Location)
+                         where r != null && r.Any()
+                         select r;
 
-            var route = routesToTargets
-                .OrderByDescending(o => o.Length)
+            var route = routes
+                .OrderBy(o => o.Length)
                 .ThenBy(o => o[0].Y)
                 .ThenBy(o => o[0].X)
                 .FirstOrDefault();
 
-            if (route != null && route.Any())
+            if (route != null)
             {
                 unit.Location = route.First();
             }

@@ -31,8 +31,5 @@ namespace day15
             return from d in Enum.GetValues(typeof(Direction)).Cast<Direction>()
                    select GetAdjacent(@this, d);
         }
-
-        public static bool GetIsWall(this bool[,] @this, Coordinate c)
-            => @this[c.X, c.Y];
     }
 }

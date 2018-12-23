@@ -103,6 +103,7 @@ namespace day15
 
                     Console.Write(unit.Char);
                     TakeTurn(unit);
+                    if (verbose) Print();
                 }
 
                 if (verbose)
@@ -115,10 +116,13 @@ namespace day15
 
         private void TakeTurn(Unit unit)
         {
-            var rf = new RouteFinder(unit.Location, _wallsSet);
+            var rf = new RouteFinder(
+                unit.Location,
+                _wallsSet.Union(_units.Where(o => o != unit).Select(o => o.Location)));
+
             var routes = (from u in _units
                           where u.GetType() != unit.GetType()
-                          let r = rf.FindRoute(u.Location)
+                          let r = rf.RouteTo(u.Location).Route
                           where r != null
                           select r)
                           .ToArray();
